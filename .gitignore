@@ -1,0 +1,12 @@
+dumps/
+images/
+**/build/
+
+lcd/
+custom-routes/
+ir-linux/
+
+decomp
+extract
+help
+colour-sprites/decode
