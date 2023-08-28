@@ -1,5 +1,6 @@
 dumps/
 images/
+captures/
 **/build/
 **/.ipynb_checkpoints/
 
@@ -10,6 +11,7 @@ ir-linux/
 decomp
 extract
 help
+decode_transaction
 
 colour-sprites/decode
 
