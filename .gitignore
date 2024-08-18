@@ -26,3 +26,5 @@ colour-sprites/walker*
 colour-sprites/*.json
 colour-sprites/*.bin
 
+decode-rotate/decode-rotate
+
