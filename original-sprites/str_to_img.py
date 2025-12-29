@@ -1,10 +1,26 @@
 from PIL import ImageFont, ImageDraw, Image
+import numpy as np
 import sys
 
 C_BLACK = 0x00
 C_DGREY = 0x40
 C_LGREY = 0x80
 C_WHITE = 0xff
+
+
+# Yoinked from https://stackoverflow.com/questions/46385999/transform-an-image-to-a-bitmap
+def img_to_bmp(ifname: str, ofname: str):
+    img = Image.open(ifname)
+    a = np.array(img)
+    r, g, b = np.split(a, 3, axis=2)
+    r = r.reshape(-1)
+    g = g.reshape(-1)
+    b = b.reshape(-1)
+
+    bitmap = list(map(lambda x: 0.299*x[0] + 0.587*x[1] + 0.114*x[2], zip(r, g, b)))
+    bitmap = np.array(bitmap).reshape([a.shape[0], a.shape[1]])
+    bmp = Image.fromarray(bitmap.astype(np.uint8))
+    bmp.save(ofname)
 
 def str_to_img(s: str, fname: str, size=(80,16), fontsize=10, padding=1, centred=False, draw_plain_border=False, draw_fancy_border=False) -> Image:
     #font = ImageFont.truetype("./Pokemon DPPt.ttf", 16)
@@ -21,26 +37,26 @@ def str_to_img(s: str, fname: str, size=(80,16), fontsize=10, padding=1, centred
 
     px, py = 2*p, p
     w = size[0] - 2*px
-    h = size[1] - 2*yy
+    h = size[1] - 2*py
 
-    off_x = p+(w-iw)/2 if centred else p
-    off_y = p+(h-ih)/2
+    off_x = px+(w-iw)/2 if centred else px
+    off_y = py+(h-ih)/2
 
     if draw_plain_border:
-        box = [(p, p), (p+w-bw, p+h-bw)]
+        box = [(px, py), (px+w-bw, py+h-bw)]
         d.rectangle(xy=box, outline=C_BLACK, width=bw)
 
     if draw_fancy_border:
-        box_dark = [(p, p), (p+w-bw, p+h-bw)]
+        box_dark = [(px, py), (px+w-bw, py+h-bw)]
         d.rounded_rectangle(xy=box_dark, radius=2, fill=C_BLACK, outline=C_BLACK, width=bw)
 
-        box_light = [(p+1*bw, p+1*bw), (p+w-2*bw, p+h-2*bw)]
+        box_light = [(px+1*bw, py+1*bw), (px+w-2*bw, py+h-2*bw)]
         d.rectangle(xy=box_light, outline=C_DGREY, width=bw)
 
-        box_light = [(p+2*bw, p+2*bw), (p+w-3*bw, p+h-3*bw)]
+        box_light = [(px+2*bw, py+2*bw), (px+w-3*bw, py+h-3*bw)]
         d.rectangle(xy=box_light, outline=C_LGREY, width=bw)
 
-        box_white = [(p+2*bw, p+2*bw), (p+w-3*bw, p+h-3*bw)]
+        box_white = [(px+2*bw, py+2*bw), (px+w-3*bw, py+h-3*bw)]
         d.rounded_rectangle(xy=box_white, radius=2, fill=C_WHITE, outline=C_WHITE, width=bw)
 
 
@@ -67,3 +83,5 @@ if __name__ == "__main__":
     #
     #_ = str_to_img(sys.argv[1], sys.argv[2])
     generate_picowalker_strings()
+    #img_to_bmp("picowalker-fancy-zenith.png", "picowalker-fancy-zenith.bmp")
+
