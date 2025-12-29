@@ -74,7 +74,8 @@ def generate_picowalker_strings():
     str_to_img("PICOWALKER", "picowalker-border.bmp", size=(80, 16), padding=0, centred=True, draw_plain_border=True)
     str_to_img("PICOWALKER", "picowalker-fancy.bmp", size=(80, 16), padding=1, centred=True, draw_fancy_border=True)
 
-    str_to_img("BAT", "bat-fancy.bmp", size=(32, 16), padding=1, centred=True, draw_fancy_border=True)
+    str_to_img("BATTERY", "bat-fancy.bmp", size=(48, 16), padding=1, centred=True, draw_fancy_border=True)
+    #str_to_img("%", "percent.bmp", size=(8, 16), padding=0, centred=True)
            
 if __name__ == "__main__":
     #if(len(sys.argv) != 3):
