@@ -20,6 +20,7 @@ original-sprites/Pokemon DPPt.ttf
 original-sprites/out/
 original-sprites/*.bmp
 original-sprites/*.bin
+original-sprites/walker_font/
 
 colour-sprites/DS*
 colour-sprites/walker*
