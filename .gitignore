@@ -26,3 +26,6 @@ colour-sprites/walker*
 colour-sprites/*.json
 colour-sprites/*.bin
 
+input/
+output/
+resource/
