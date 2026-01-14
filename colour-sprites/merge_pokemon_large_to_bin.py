@@ -97,7 +97,7 @@ typedef struct {
 """
 
 __FOOTER__ = """extern const pokemon_large_entry_t pokemon_large_map[POKEMON_LARGE_COUNT];
-extern uint8_t color_pokemon_large[POKEMON_lARGE_BIN_SIZE];
+extern uint8_t color_pokemon_large[POKEMON_LARGE_BIN_SIZE];
 
 /********************************************************************************
  * @brief                   Find Pokemon sprite by species, gender, and variant
@@ -125,7 +125,7 @@ uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_
 {
     uint32_t search_key = make_pokemon_large_key(species, variant_index, is_female);
     int left = 0;
-    int right = POKEMON_PARGE_COUNT - 1;
+    int right = POKEMON_LARGE_COUNT - 1;
 
     while (left <= right)
     {
@@ -149,7 +149,7 @@ uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_
         else right = mid - 1;
     }
 
-    // printf("[COLOR_POKEMON_SMALL_MISS] Key 0x%06X: not found in lookup table", search_key);
+    // printf("[COLOR_POKEMON_LARGE_MISS] Key 0x%06X: not found in lookup table", search_key);
     return NULL;
 }
 """
