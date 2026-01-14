@@ -219,7 +219,7 @@ def decode_sprite(data:bytes, width:int, height:int) -> Image.Image:
     return img
     
 if __name__ == '__main__':
-    eeprom_path = 'resource/eeprom.bin'
+    eeprom_path = 'images/resource/eeprom/eeprom_beautiful_beach.bin'
     if not os.path.exists(eeprom_path):
         print(f"Error: {eeprom_path} not found!")
         exit()
@@ -227,7 +227,7 @@ if __name__ == '__main__':
     with open(eeprom_path, 'rb') as f:
         eeprom_data = f.read()
 
-    output_dir = 'output/sprites_by_address'
+    output_dir = 'images/output/sprites_by_address'
     os.makedirs(output_dir, exist_ok=True)
 
     total_sprites = 0

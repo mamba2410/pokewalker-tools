@@ -64,6 +64,9 @@ uint8_t* find_route_by_index(uint8_t route_index) {
 }
 """
 
+# =============================================================================
+#
+# =============================================================================
 def write_map_header(index_map:List[Dict], output_file:Path, bin_size:int):
     """
     Write C header file with address mapping.
@@ -90,7 +93,7 @@ def write_map_header(index_map:List[Dict], output_file:Path, bin_size:int):
         file.write("const color_routes_t routes_map[ROUTES_COUNT] = {\n")
 
         for entry in index_map:
-            file.write(f"    {{ {entry['route_index']}, "
+            file.write(f"    {{ {entry.get('route_index')}, "
                    f"0x{entry.get('bin_offset'):06X}, "
                    f"{entry.get('size')}, "
                    f"{entry.get('width')}, "
@@ -105,6 +108,9 @@ __INFO__ = """Usage: merge_routes_to_bin.py <input_dir> <output.bin> <output_map
 
 Example:\n   .venv/bin/python3.12 colour-sprites/merge_routes_to_bin.py images/routes images/output/color_routes.bin images/output/picowalker_rp2xxx_color_routes.h"""
 
+# =============================================================================
+#
+# =============================================================================
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         print(__INFO__)
