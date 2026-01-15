@@ -103,8 +103,8 @@ extern uint8_t color_pokemon_large[POKEMON_LARGE_BIN_SIZE];
  * @brief                   Find Pokemon sprite by species, gender, and variant
  *                          Time complexity: O(log n) binary search
  * @param species           Pokemon species ID (1-493)
- * @param is_female         Gender flag: 0=male/genderless, 1=female
  * @param variant_index     Form variant (0-31)
+ * @param is_female         Gender flag: 0=male/genderless, 1=female
  * @return                  Returns pointer to sprite data, or NULL if not found
  ********************************************************************************/
 uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_female);
@@ -190,7 +190,7 @@ def write_map_header(address_map: List[Dict], output_file: Path, bin_size: int):
                 f"0x{entry.get('bin_offset'):06X}, "
                 f"{entry.get('size'):5d}, "
                 f"{entry.get('width'):2d}, "
-                f"{entry.get('height'):2d}, // {entry.get('name'):10} {entry.get('form')} {entry.get('is_female')}\n")
+                f"{entry.get('height'):2d} }}, // {entry.get('name'):10} {entry.get('form')} {entry.get('is_female')}\n")
 
         file.write("};\n\n")
 
