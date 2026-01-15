@@ -107,7 +107,8 @@ extern uint8_t color_pokemon_large[POKEMON_LARGE_BIN_SIZE];
  * @param is_female         Gender flag: 0=male/genderless, 1=female
  * @return                  Returns pointer to sprite data, or NULL if not found
  ********************************************************************************/
-uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_female);
+const pokemon_large_entry_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_female); 
+//uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_female);
 
 #endif // __ASSEMBLER__
 
@@ -143,7 +144,8 @@ uint8_t* find_pokemon_large(uint16_t species, uint8_t variant_index, uint8_t is_
                 return NULL; // Out of bounds
             }
             // printf("[COLOR_POKEMON_LARGE_FOUND] Key 0x%06X: offset=0x%06X, size=%u bytes, %ux%u pixels", search_key, offset, size, pokemon_large_map[mid].width, pokemon_large_map[mid].height);
-            return color_pokemon_large + offset;
+            // return color_pokemon_large + offset;
+            return &pokemon_large_map[mid];
         }
         else if (mid_key < search_key) left = mid + 1;
         else right = mid - 1;

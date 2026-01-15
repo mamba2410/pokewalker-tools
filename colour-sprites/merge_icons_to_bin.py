@@ -39,7 +39,8 @@ extern uint8_t color_icons[ICONS_BIN_SIZE];
  * @param eeprom_address    address needed for lookup table
  * @return                  Returns pointer to image data in color_icons bin, or NULL if not found
 ********************************************************************************/
-uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address);
+const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
+//uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address);
 
 #endif // __ASSEMBLER__
 
@@ -47,7 +48,8 @@ uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address);
 
 """
 __LOOKUP_TABLE__ = """
-uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address) 
+//uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address) 
+const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
 {
     int left = 0;
     int right = ICONS_COUNT - 1;
@@ -67,8 +69,9 @@ uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
                 // printf("[COLOR_ICON_ERROR] Address 0x%04X: bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)", eeprom_address, offset, size, ICONS_BIN_SIZE);
                 return NULL; // Out of bounds
             }
-            //printf("[COLOR_ICON_FOUND] Address 0x%04X: offset=0x%06X, size=%u bytes, %ux%u pixels", eeprom_address, offset, size, icons_map[mid].width, icons_map[mid].height);
-            return color_icons + offset;
+            // printf("[COLOR_ICON_FOUND] Address 0x%04X: offset=0x%06X, size=%u bytes, %ux%u pixels", eeprom_address, offset, size, icons_map[mid].width, icons_map[mid].height);
+            // return color_icons + offset;
+            return &icons_map[mid];
         } 
         else if (mid_addr < eeprom_address) left = mid + 1;
         else right = mid - 1;
@@ -118,7 +121,9 @@ def write_map_header(address_map:List[Dict], output_file:Path, bin_size:int):
 
 __INFO__ = """Usage: merge_icons_to_bin.py <input_dir> <output.bin> <output_map.h>
 
-Example:\n   .venv/bin/python3.12 colour-sprites/merge_icons_to_bin.py images/icons images/output/color_icons.bin images/output/picowalker_rp2xxx_color_icons.h"""
+Example:
+    .venv/bin/python3.12 colour-sprites/merge_icons_to_bin.py images/color_icons images/output/color_icons.bin images/output/picowalker_rp2xxx_color_icons.h
+"""
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:

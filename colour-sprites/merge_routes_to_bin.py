@@ -39,7 +39,8 @@ extern uint8_t color_routes[ROUTES_BIN_SIZE];
  * @param eeprom_address    address needed for lookup table
  * @return                  Returns pointer to image data in color_routes bin, or NULL if not found
 ********************************************************************************/
-uint8_t* find_route_by_index(uint8_t route_index);
+const color_routes_t* find_route_by_index(uint8_t route_index);
+//uint8_t* find_route_by_index(uint8_t route_index);
 
 #endif // __ASSEMBLER__
 
@@ -48,19 +49,27 @@ uint8_t* find_route_by_index(uint8_t route_index);
 """
 
 __LOOKUP_TABLE__ = """
-uint8_t* find_route_by_index(uint8_t route_index) {
-    if (route_index >= ROUTES_COUNT) {
-        return NULL; // Invalid index
+//uint8_t* find_route_by_index(uint8_t route_index) 
+const color_routes_t* find_route_by_index(uint8_t route_index)
+{
+    if (route_index >= ROUTES_COUNT) 
+    {
+        // printf("[COLOR_ROUTE_MISS] Invalid Index %u", route_index);
+        return NULL;
     }
 
     uint32_t offset = routes_map[route_index].bin_offset;
     uint32_t size = routes_map[route_index].size;
 
-    if (offset + size > ROUTES_BIN_SIZE) {
+    if (offset + size > ROUTES_BIN_SIZE) 
+    {
+        // printf("[COLOR_ROUTE_ERROR] bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)", offset, size, ROUTES_BIN_SIZE);
         return NULL; // Out of bounds
     }
 
-    return color_routes + offset;
+    // printf("[COLOR_ROUTE_FOUND] index=%u", route_index);
+    // return color_routes + offset;
+    return &routes_map[route_index];
 }
 """
 
@@ -106,7 +115,9 @@ def write_map_header(index_map:List[Dict], output_file:Path, bin_size:int):
 
 __INFO__ = """Usage: merge_routes_to_bin.py <input_dir> <output.bin> <output_map.h>
 
-Example:\n   .venv/bin/python3.12 colour-sprites/merge_routes_to_bin.py images/routes images/output/color_routes.bin images/output/picowalker_rp2xxx_color_routes.h"""
+Example:
+    .venv/bin/python3.12 colour-sprites/merge_routes_to_bin.py images/color_routes images/output/color_routes.bin images/output/picowalker_rp2xxx_color_routes.h
+"""
 
 # =============================================================================
 #

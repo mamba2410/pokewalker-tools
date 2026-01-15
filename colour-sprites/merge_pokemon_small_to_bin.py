@@ -106,7 +106,8 @@ extern uint8_t color_pokemon_small[POKEMON_SMALL_BIN_SIZE];
  * @param variant_index     Form variant (0-31)
  * @return                  Returns pointer to sprite data, or NULL if not found
  ********************************************************************************/
-uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index);
+const pokemon_small_entry_t* find_pokemon_small(uint16_t species, uint8_t variant_index);
+//uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index);
 
 #endif // __ASSEMBLER__
 
@@ -142,7 +143,8 @@ uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index)
                 return NULL; // Out of bounds
             }
             // printf("[COLOR_POKEMON_SMALL_FOUND] Key 0x%06X: offset=0x%06X, size=%u bytes, %ux%u pixels", search_key, offset, size, pokemon_small_map[mid].width, pokemon_small_map[mid].height);
-            return color_pokemon_small + offset;
+            // return color_pokemon_small + offset;
+            return &pokemon_small_map[mid];
         }
         else if (mid_key < search_key) left = mid + 1;
         else right = mid - 1;
