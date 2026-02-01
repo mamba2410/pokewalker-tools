@@ -14,7 +14,57 @@ from typing import List, Dict, Optional
 # Third Party Library
 from PIL import Image
 
+# RLE
+from rle_raw_pixels import rle_compress_rgb565
+
 __FORMS__ = {
+    # Default Form
+    "Normal": 0,
+
+    # Arceus
+    "Fighting": 1,
+    "Flying": 2,
+    "Poison": 3,
+    "Ground": 4,
+    "Rock": 5,
+    "Bug": 6,
+    "Ghost": 7,
+    "Steel": 8,
+    "Mystery": 9, # ???
+    "Fire": 10,
+    "Water": 11,
+    "Grass": 12,
+    "Electric": 13,
+    "Psychic": 14,
+    "Ice": 15,
+    "Dragon": 16,
+    "Dark": 17,
+
+    # Burmy / Wormadam
+    "Plant": 0,
+    "Sandy": 1,
+    "Trash": 2,
+
+    # Castform
+    # "Normal": 0,
+    "Sunny": 1,
+    "Rainy": 2,
+    "Snowy": 3,
+
+    # Cherrim
+    "Overcast": 0,
+    "Sunshine": 1,
+
+    # Deoxys
+    "Attack": 1,
+    "Defense": 2,
+    "Speed": 3,
+
+    # Giratina
+    "Altered": 0,
+    "Origin": 1,
+
+    # Unknown
     "A": 0,
     "B": 1,
     "C": 2,
@@ -43,38 +93,21 @@ __FORMS__ = {
     "Z": 25,
     "Exclamation Mark": 26, # !
     "Question Mark": 27, # ?
-    "Normal": 0,
-    "Fighting": 1,
-    "Flying": 2,
-    "Poison": 3,
-    "Ground": 4,
-    "Rock": 5,
-    "Bug": 6,
-    "Ghost": 7,
-    "Steel": 8,
-    "Fire": 9,
-    "Water": 10,
-    "Grass": 11,
-    "Electric": 12,
-    "Psychic": 13,
-    "Ice": 14,
-    "Dragon": 15,
-    "Dark": 16,
-    "Attack": 1,
-    "Defense": 2,
-    "Speed": 3,
-    "Plant_Cloak": 0,
-    "Sandy_Cloak": 1,
-    "Trash_Cloak": 2,
-    "Altered": 0,
-    "Origin": 1,
-    "Land": 0,
-    "Sky": 1,
+
+    # Rotom
     "Heat": 1,
     "Wash": 2,
     "Frost": 3,
     "Fan": 4,
-    "Mow": 5
+    "Mow": 5,
+
+    # Shaymin
+    "Land": 0,
+    "Sky": 1,
+
+    # Shellos / Gastrodon
+    "West": 0,
+    "East": 1
 }
 
 __HEADER__ = """#ifndef POKEMON_SMALL_MAP_H
@@ -85,13 +118,14 @@ __HEADER__ = """#ifndef POKEMON_SMALL_MAP_H
 
 // Pokemon sprite structure with variant support
 typedef struct {
-    //uint16_t species;          // Pokemon species ID (1-493)
-    //uint8_t variant_index;     // Form variant (0-31)
-    uint32_t composite_key;    // (species << 8) | (variant_index & 0x1F)
-    uint32_t bin_offset;       // Offset in merged binary file
-    uint32_t size;             // Size in bytes
-    uint16_t width;            // Width in pixels
-    uint16_t height;           // Height in pixels
+    //uint16_t species;         // Pokemon species ID (1-493)
+    //uint8_t variant_index;    // Form variant (0-31)
+    uint32_t composite_key;     // (species << 8) | (variant_index & 0x1F)
+    uint32_t bin_offset;        // Offset in merged binary file
+    uint32_t size;              // Size in bytes
+    uint32_t uncompressed_size; // Size in bytes
+    uint16_t width;             // Width in pixels
+    uint16_t height;            // Height in pixels
 } pokemon_small_entry_t;
 
 """
@@ -115,13 +149,13 @@ const pokemon_small_entry_t* find_pokemon_small(uint16_t species, uint8_t varian
 
 """
 
-__LOOKUP_FUNCTIONS__ = """
-// Composite key: (species << 5) | (variant_index & 0x1F)
+__LOOKUP_FUNCTIONS__ = r"""
+// Composite key: (species << 8) | (variant_index & 0x1F)
 static inline uint32_t make_pokemon_small_key(uint16_t species, uint8_t variant_index) {
-    return ((uint32_t)species << 5) | (variant_index & 0x1F);
+    return ((uint32_t)species << 8) | (variant_index & 0x1F);
 }
 
-uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index)
+const pokemon_small_entry_t* find_pokemon_small(uint16_t species, uint8_t variant_index)
 {
     uint32_t search_key = make_pokemon_small_key(species, variant_index);
     int left = 0;
@@ -139,10 +173,10 @@ uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index)
 
             if (offset + size > POKEMON_SMALL_BIN_SIZE)
             {
-                // printf("[COLOR_POKEMON_SMALL_ERROR] Key 0x%06X: bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)", search_key, offset, size, POKEMON_SMALL_BIN_SIZE);
+                // printf("[COLOR_POKEMON_SMALL_ERROR] Key 0x%06X: bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)\n", search_key, offset, size, POKEMON_SMALL_BIN_SIZE);
                 return NULL; // Out of bounds
             }
-            // printf("[COLOR_POKEMON_SMALL_FOUND] Key 0x%06X: offset=0x%06X, size=%u bytes, %ux%u pixels", search_key, offset, size, pokemon_small_map[mid].width, pokemon_small_map[mid].height);
+            // printf("[COLOR_POKEMON_SMALL_FOUND] Key 0x%06X: offset=0x%06X, size=%u bytes, %ux%u pixels\n", search_key, offset, size, pokemon_small_map[mid].width, pokemon_small_map[mid].height);
             // return color_pokemon_small + offset;
             return &pokemon_small_map[mid];
         }
@@ -150,7 +184,7 @@ uint8_t* find_pokemon_small(uint16_t species, uint8_t variant_index)
         else right = mid - 1;
     }
 
-    // printf("[COLOR_POKEMON_SMALL_MISS] Key 0x%06X: not found in lookup table", search_key);
+    // printf("[COLOR_POKEMON_SMALL_MISS] Key 0x%06X: not found in lookup table\n", search_key);
     return NULL;
 }
 """
@@ -189,6 +223,7 @@ def write_map_header(address_map: List[Dict], output_file: Path, bin_size: int):
                 # f"{entry.get('variant_index'):2d}, "
                 f"0x{entry.get('bin_offset'):06X}, "
                 f"{entry.get('size'):5d}, "
+                f"{entry.get('uncompressed_size'):4}, "
                 f"{entry.get('width'):2d}, "
                 f"{entry.get('height'):2d} }}, // {entry.get('name'):10} {entry.get('form')}\n")
 
@@ -291,27 +326,29 @@ if __name__ == '__main__':
                 raw_pixels.append(rgb565 & 0xFF)
                 raw_pixels.append((rgb565 >> 8) & 0xFF)
 
+        compressed_pixels = rle_compress_rgb565(raw_pixels)
+
         # Record mapping
-        bin_offset = bin_data.__len__()
         address_map.append({
             'composite_key': sprite.get('composite_key'),
             'species': int(sprite.get('species')),
             'variant_index': int(sprite.get('variant_index')),
-            'bin_offset': bin_offset,
-            'size': raw_pixels.__len__(),
+            'bin_offset': bin_data.__len__(),
+            'size': compressed_pixels.__len__(),
+            'uncompressed_size': raw_pixels.__len__(),
             'width': width,
             'height': height,
             'name': sprite.get('name'),
             'form': sprite.get('form')
         })
 
-        # Append sprite data to binary file
-        bin_data += raw_pixels
-
         composite_key = sprite.get('composite_key') # make_composite_key(sprite.get('species'), sprite.get('variant_index'))
         print(f"  Species {sprite.get('species'):03d}_{sprite.get('variant_index')} -> "
-              f"offset 0x{bin_offset:06X} ({raw_pixels.__len__()} bytes) "
+              f"offset 0x{bin_data.__len__():06X} ({compressed_pixels.__len__()} bytes) "
               f"{width}x{height} {sprite.get('name')} [key=0x{composite_key:06X}]")
+        
+        # Append PNG data to binary file
+        bin_data += compressed_pixels #raw_pixels
 
     # Write binary file
     with open(output_bin, 'wb') as file:

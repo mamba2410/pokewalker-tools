@@ -13,6 +13,9 @@ from typing import List, Dict
 # Third Party Library
 from PIL import Image
 
+# RLE
+from rle_raw_pixels import rle_compress_rgb565
+
 __HEADER__ = """#ifndef ICONS_MAP_H
 #define ICONS_MAP_H
 
@@ -24,6 +27,7 @@ typedef struct {
     uint16_t eeprom_address;    // Original EEPROM address
     uint32_t bin_offset;        // Offset in merged binary file
     uint32_t size;              // Size in bytes
+    uint32_t uncompressed_size; // Size in bytes
     uint16_t width;             // Width in pixels
     uint16_t height;            // Height in pixels
 } color_icons_t;
@@ -39,7 +43,7 @@ extern uint8_t color_icons[ICONS_BIN_SIZE];
  * @param eeprom_address    address needed for lookup table
  * @return                  Returns pointer to image data in color_icons bin, or NULL if not found
 ********************************************************************************/
-const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
+const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address);
 //uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address);
 
 #endif // __ASSEMBLER__
@@ -47,7 +51,7 @@ const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
 #endif // ICONS_MAP_H
 
 """
-__LOOKUP_TABLE__ = """
+__LOOKUP_TABLE__ = r"""
 //uint8_t* find_icon_by_eeprom_address(uint16_t eeprom_address) 
 const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
 {
@@ -66,10 +70,10 @@ const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
 
             if (offset + size > ICONS_BIN_SIZE) 
             {
-                // printf("[COLOR_ICON_ERROR] Address 0x%04X: bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)", eeprom_address, offset, size, ICONS_BIN_SIZE);
+                // printf("[COLOR_ICON_ERROR] Address 0x%04X: bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)\n", eeprom_address, offset, size, ICONS_BIN_SIZE);
                 return NULL; // Out of bounds
             }
-            // printf("[COLOR_ICON_FOUND] Address 0x%04X: offset=0x%06X, size=%u bytes, %ux%u pixels", eeprom_address, offset, size, icons_map[mid].width, icons_map[mid].height);
+            // printf("[COLOR_ICON_FOUND] Address 0x%04X: offset=0x%06X, size=%u bytes, %ux%u pixels\n", eeprom_address, offset, size, icons_map[mid].width, icons_map[mid].height);
             // return color_icons + offset;
             return &icons_map[mid];
         } 
@@ -77,7 +81,7 @@ const color_icons_t* find_icon_by_eeprom_address(uint16_t eeprom_address)
         else right = mid - 1;
     }
 
-    // printf("[COLOR_ICON_MISS] Address 0x%04X: not found in lookup table", eeprom_address);
+    // printf("[COLOR_ICON_MISS] Address 0x%04X: not found in lookup table\n", eeprom_address);
     return NULL;
 }
 """
@@ -111,6 +115,7 @@ def write_map_header(address_map:List[Dict], output_file:Path, bin_size:int):
             file.write(f"    {{ 0x{entry.get('eeprom_address'):04X}, "
                    f"0x{entry.get('bin_offset'):06X}, "
                    f"{entry.get('size'):4}, "
+                   f"{entry.get('uncompressed_size'):4}, "
                    f"{entry.get('width'):2}, "
                    f"{entry.get('height'):2} }},  // {entry.get('name')}\n")
 
@@ -196,21 +201,23 @@ if __name__ == '__main__':
                 raw_pixels.append(rgb565 & 0xFF)
                 raw_pixels.append((rgb565 >> 8) & 0xFF)
 
+        compressed_pixels = rle_compress_rgb565(raw_pixels)
+
         # Record mapping
-        bin_offset = bin_data.__len__()
         address_map.append({
             'eeprom_address': sprite.get('eeprom_address'),
-            'bin_offset': bin_offset,
-            'size': raw_pixels.__len__(),
+            'bin_offset': bin_data.__len__(),
+            'size': compressed_pixels.__len__(),
+            'uncompressed_size': raw_pixels.__len__(),
             'width': width,
             'height': height,
             'name': sprite.get('name')
         })
 
+        print(f"  0x{sprite.get('eeprom_address'):04X} -> offset 0x{bin_data.__len__():06X} ({compressed_pixels.__len__()} bytes) {width}x{height} {sprite.get('name')}")
+        
         # Append PNG data to binary file
-        bin_data += raw_pixels
-
-        print(f"  0x{sprite.get('eeprom_address'):04X} -> offset 0x{bin_offset:06X} ({png_data.__len__()} bytes) {width}x{height} {sprite.get('name')}")
+        bin_data += compressed_pixels #raw_pixels
 
     # Write binary file
     with open(output_bin, 'wb') as file:

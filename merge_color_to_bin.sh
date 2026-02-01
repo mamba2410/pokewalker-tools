@@ -1,0 +1,5 @@
+.venv/bin/python3.12 colour-sprites/merge_icons_to_bin.py images/color_icons images/output/color_icons.bin images/output/picowalker_rp2xxx_color_icons.h
+.venv/bin/python3.12 colour-sprites/merge_routes_to_bin.py images/color_routes images/output/color_routes.bin images/output/picowalker_rp2xxx_color_routes.h
+.venv/bin/python3.12 colour-sprites/merge_pokemon_small_to_bin.py images/color_pokemon_small images/color_pokemon_small/icon_map.json images/output/color_pokemon_small.bin images/output/picowalker_rp2xxx_color_pokemon_small.h
+.venv/bin/python3.12 colour-sprites/merge_pokemon_large_to_bin.py images/color_pokemon_large/color images/color_pokemon_large/mapped-sprite-data.json images/output/color_pokemon_large.bin images/output/picowalker_rp2xxx_color_pokemon_large.h
+.venv/bin/python3.12 colour-sprites/merge_pokemon_large_to_bin.py images/color_pokemon_large/color_shiny images/color_pokemon_large/mapped-sprite-data.json images/output/color_pokemon_large_shiny.bin images/output/picowalker_rp2xxx_color_pokemon_large_shiny.h

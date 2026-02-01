@@ -13,6 +13,9 @@ from typing import List, Dict
 # Third Party Library
 from PIL import Image
 
+# RLE
+from rle_raw_pixels import rle_compress_rgb565
+
 __HEADER__ = """#ifndef ROUTES_MAP_H
 #define ROUTES_MAP_H
 
@@ -24,6 +27,7 @@ typedef struct {
     uint8_t route_index;        // Values (0-7) 0xBF06 Address for Route Index Lookup
     uint32_t bin_offset;        // Offset in merged binary file
     uint32_t size;              // Size in bytes
+    uint32_t uncompressed_size; // Size in bytes
     uint16_t width;             // Width in pixels
     uint16_t height;            // Height in pixels
 } color_routes_t;
@@ -48,13 +52,13 @@ const color_routes_t* find_route_by_index(uint8_t route_index);
 
 """
 
-__LOOKUP_TABLE__ = """
+__LOOKUP_TABLE__ = r"""
 //uint8_t* find_route_by_index(uint8_t route_index) 
 const color_routes_t* find_route_by_index(uint8_t route_index)
 {
     if (route_index >= ROUTES_COUNT) 
     {
-        // printf("[COLOR_ROUTE_MISS] Invalid Index %u", route_index);
+        // printf("[COLOR_ROUTE_MISS] Invalid Index %u\n", route_index);
         return NULL;
     }
 
@@ -63,11 +67,11 @@ const color_routes_t* find_route_by_index(uint8_t route_index)
 
     if (offset + size > ROUTES_BIN_SIZE) 
     {
-        // printf("[COLOR_ROUTE_ERROR] bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)", offset, size, ROUTES_BIN_SIZE);
+        // printf("[COLOR_ROUTE_ERROR] bounds check failed (offset=0x%06X + size=%u > BIN_SIZE=%u)\n", offset, size, ROUTES_BIN_SIZE);
         return NULL; // Out of bounds
     }
 
-    // printf("[COLOR_ROUTE_FOUND] index=%u", route_index);
+    // printf("[COLOR_ROUTE_FOUND] index=%u\n", route_index);
     // return color_routes + offset;
     return &routes_map[route_index];
 }
@@ -105,6 +109,7 @@ def write_map_header(index_map:List[Dict], output_file:Path, bin_size:int):
             file.write(f"    {{ {entry.get('route_index')}, "
                    f"0x{entry.get('bin_offset'):06X}, "
                    f"{entry.get('size')}, "
+                   f"{entry.get('uncompressed_size'):4}, "
                    f"{entry.get('width')}, "
                    f"{entry.get('height')} }},  // {entry.get('name')}\n")
 
@@ -192,21 +197,23 @@ if __name__ == '__main__':
                 raw_pixels.append(rgb565 & 0xFF)
                 raw_pixels.append((rgb565 >> 8) & 0xFF)
 
+        compressed_pixels = rle_compress_rgb565(raw_pixels)
+
         # Record mapping
-        bin_offset = bin_data.__len__()
         index_map.append({
             'route_index': sprite.get('index'),
-            'bin_offset': bin_offset,
-            'size': raw_pixels.__len__(),
+            'bin_offset': bin_data.__len__(),
+            'size': compressed_pixels.__len__(),
+            'uncompressed_size': raw_pixels.__len__(),
             'width': width,
             'height': height,
             'name': sprite.get('name')
         })
 
-        # Append PNG data to binary file
-        bin_data += raw_pixels
+        print(f"  Index: {sprite.get('index')} -> offset 0x{bin_data.__len__():06X} ({compressed_pixels.__len__()} bytes) {width}x{height} {sprite.get('name')}")
 
-        print(f"  Index: {sprite.get('index')} -> offset 0x{bin_offset:06X} ({png_data.__len__()} bytes) {width}x{height} {sprite.get('name')}")
+        # Append PNG data to binary file
+        bin_data += compressed_pixels #raw_pixels
 
     # Write binary file
     with open(output_bin, 'wb') as file:
