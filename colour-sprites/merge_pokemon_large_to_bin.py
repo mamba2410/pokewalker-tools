@@ -64,6 +64,9 @@ __FORMS__ = {
     "Altered": 0,
     "Origin": 1,
 
+    # Pichu Spiky-eared
+    "Spiky-eared":1,
+
     # Unknown
     "A": 0,
     "B": 1,
@@ -178,7 +181,7 @@ const pokemon_large_entry_t* find_pokemon_large(uint16_t species, uint8_t varian
                 return NULL; // Out of bounds
             }
             // printf("[COLOR_POKEMON_LARGE_FOUND] Key 0x%06X: offset=0x%06X, size=%u bytes, %ux%u pixels\n", search_key, offset, size, pokemon_large_map[mid].width, pokemon_large_map[mid].height);
-            // printf("[COLOR_POKEMON_LARGE_FOUND] Species: %u Variant: %u Female: %u", species, variant_index, is_female); 
+            // printf("[COLOR_POKEMON_LARGE_FOUND] Species: %u Variant: %u Female: %u\n", species, variant_index, is_female); 
             // return color_pokemon_large + offset;
             return &pokemon_large_map[mid];
         }
